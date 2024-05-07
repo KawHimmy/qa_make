@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问答对生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            background-image: url('static/image/222.jpg');
+            background-size: cover;
+            /* background-position: center; */
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f6eea7;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #text-input {
+            width: 98%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #fcea75;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>问答对生成器</h1>
+        <textarea id="text-input" rows="4" placeholder="请输入文本..."></textarea>
+        <!-- 添加文件上传 -->
+        <input type="file" id="file-input" accept=".txt">
+        <button onclick="generateQAPairsWithModel()">使用大模型生成</button>
+        <button onclick="generateQAPairsWithAPI()">使用API生成</button>
+        <div id="output"></div>
+        <!-- 添加下载按钮 -->
+        <a id="download-link" style="display: none;" download="generated_qa_pairs.txt"><button id="download-button">下载结果</button></a>
+    </div>
+
+    <script>
+        function generateQAPairsWithModel() {
+            const text = document.getElementById('text-input').value;
+            const file = document.getElementById('file-input').files[0]; // 获取上传的文件
+            const formData = new FormData(); // 创建表单数据对象
+            formData.append('text', text); // 将文本内容添加到表单数据
+            if (file) {
+                formData.append('file', file); // 如果文件存在，将文件添加到表单数据
+            }
+            clearOutput(); // 清空输出区域
+            fetch('/generate-qapairs-model', {
+                method: 'POST',
+                body: formData // 发送表单数据
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerText = '大模型生成结果：\n' + data.pairs.join('\n');
+                // 显示下载按钮
+                document.getElementById('download-link').style.display = 'inline';
+                // 设置下载链接
+                const downloadLink = document.getElementById('download-link');
+                const blob = new Blob([data.pairs.join('\n')], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                downloadLink.href = url;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function generateQAPairsWithAPI() {
+            const text = document.getElementById('text-input').value;
+            const file = document.getElementById('file-input').files[0]; // 获取上传的文件
+            const formData = new FormData(); // 创建表单数据对象
+            formData.append('text', text); // 将文本内容添加到表单数据
+            if (file) {
+                formData.append('file', file); // 如果文件存在，将文件添加到表单数据
+            }
+            clearOutput(); // 清空输出区域
+            fetch('/generate-qapairs-api', {
+                method: 'POST',
+                body: formData // 发送表单数据
+            })
+            .then(response => response.json())
+            .then(data => {
+                const outputDiv = document.getElementById('output');
+                outputDiv.innerText = 'API生成结果：\n' + data.pairs.join('\n');
+                // 显示下载按钮
+                document.getElementById('download-link').style.display = 'inline';
+                // 设置下载链接
+                const downloadLink = document.getElementById('download-link');
+                const blob = new Blob([data.pairs.join('\n')], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                downloadLink.href = url;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerText = ''; // 清空输出区域内容
+        }
+    </script>
+</body>
+</html>

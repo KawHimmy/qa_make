@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问答对生成器</title>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>问答对生成器</h1>
+        <textarea id="text-input" rows="4" placeholder="请输入文本..."></textarea>
+        <button onclick="generateQAPairsWithModel()">使用大模型生成</button>
+        <button onclick="generateQAPairsWithAPI()">使用API生成</button>
+        <input type="file" id="file-input" style="display: none;">
+        <button onclick="uploadFile()">上传文件</button>
+        <button onclick="downloadOutput()">输出文件</button>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        function generateQAPairsWithModel() {
+            const text = document.getElementById('text-input').value;
+            clearOutput();
+            fetch('/generate-qapairs-model', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({text: text})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = '大模型生成结果：\n' + data.pairs.join('\n');
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function generateQAPairsWithAPI() {
+            const text = document.getElementById('text-input').value;
+            clearOutput();
+            fetch('/generate-qapairs-api', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({text: text})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = 'API生成结果：\n' + data.pairs.join('\n');
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerText = '';
+        }
+
+        function uploadFile() {
+            const input = document.getElementById('file-input');
+            input.click();
+
+            input.addEventListener('change', function() {
+                const file = input.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                fetch('/upload-file', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log('文件上传成功:', data);
+                })
+                .catch(error => console.error('文件上传失败:', error));
+            });
+        }
+
+        function downloadOutput() {
+            fetch('/output-file')
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.txt';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => console.error('文件下载失败:', error));
+        }
+
+    </script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+        background-image: url('../static/image/222.jpg');
+        background-size: cover;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f6eea7;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+    }
+
+    #text-input {
+        width: 98%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #fcea75;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+
+    #output {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        border-radius: 4px;
+    }
+</style>
+</body>
+</html>
